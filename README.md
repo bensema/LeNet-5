@@ -6,6 +6,18 @@
 LeNet5 分为7层 Input->C1->S2->C3->S4->C5->F6->Output。参考视觉皮层处理，hubel and wiesel 的猫实验,不同神经细胞对不同图案反应，对应C1->S2->C3->S4->C5用于特征提取。
 
 
+    Input->C1:
+        6个卷积核提取6张特征图
+    C2->S2:
+        池化既保存主要特征也减少计算量，得到6张特征图
+    S2->C3:
+        6张图卷积成为16张特征图。第1～6特征图，连接3张图，第7～15特征图，连接4张图，第16特征图，连接6张图。（组合，总分总的感觉）
+    C3->S4:
+        池化既保存主要特征也减少计算量，得到16张特征图
+    S4->C5:
+        全连接
+
+
 ![image](https://github.com/bensema/LeNet-5/blob/master/view.png)
 
 ![image](https://github.com/bensema/LeNet-5/blob/master/lenet-5.png)
