@@ -23,6 +23,8 @@ LeNet5 分为7层 Input->C1->S2->C3->S4->C5->F6->Output。参考视觉皮层处�
 
 ![image](https://github.com/bensema/LeNet-5/blob/master/lenet-5.png)
 
+![image](https://github.com/bensema/LeNet-5/blob/master/web.png)
+
 
 
 参考资料:
