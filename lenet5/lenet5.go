@@ -173,12 +173,12 @@ func ConvolutionValid(inData []float64, inW int, inH int, kernel []float64, kW i
 	return
 }
 
-func FullyConnectedPropagation(prev_layer *Layer, layer *Layer) {
+func FullyConnectedPropagation(prevLayer *Layer, layer *Layer) {
 
 	for i := 0; i < layer.MapCount; i++ {
 		sum := 0.0
-		for j := 0; j < prev_layer.MapCount; j++ {
-			sum += prev_layer.FeatureMaps[j].Data[0] * layer.Kernels[j*layer.MapCount+i].Weight[0]
+		for j := 0; j < prevLayer.MapCount; j++ {
+			sum += prevLayer.FeatureMaps[j].Data[0] * layer.Kernels[j*layer.MapCount+i].Weight[0]
 		}
 		sum += layer.FeatureMaps[i].Bias
 		layer.FeatureMaps[i].Data[0] = Tanh(sum)
@@ -186,19 +186,19 @@ func FullyConnectedPropagation(prev_layer *Layer, layer *Layer) {
 }
 
 // 向后
-func FullyConnectedBackPropagation(layer *Layer, prev_layer *Layer) {
+func FullyConnectedBackPropagation(layer *Layer, prevLayer *Layer) {
 	// delta
-	for i := 0; i < prev_layer.MapCount; i++ {
-		prev_layer.FeatureMaps[i].Err[0] = 0.0
+	for i := 0; i < prevLayer.MapCount; i++ {
+		prevLayer.FeatureMaps[i].Err[0] = 0.0
 		for j := 0; j < layer.MapCount; j++ {
-			prev_layer.FeatureMaps[i].Err[0] += layer.FeatureMaps[j].Err[0] * layer.Kernels[i*layer.MapCount+j].Weight[0]
+			prevLayer.FeatureMaps[i].Err[0] += layer.FeatureMaps[j].Err[0] * layer.Kernels[i*layer.MapCount+j].Weight[0]
 		}
-		prev_layer.FeatureMaps[i].Err[0] *= DTanh(prev_layer.FeatureMaps[i].Data[0])
+		prevLayer.FeatureMaps[i].Err[0] *= DTanh(prevLayer.FeatureMaps[i].Data[0])
 	}
 	// dW
-	for i := 0; i < prev_layer.MapCount; i++ {
+	for i := 0; i < prevLayer.MapCount; i++ {
 		for j := 0; j < layer.MapCount; j++ {
-			layer.Kernels[i*layer.MapCount+j].DWeight[0] += layer.FeatureMaps[j].Err[0] * prev_layer.FeatureMaps[i].Data[0]
+			layer.Kernels[i*layer.MapCount+j].DWeight[0] += layer.FeatureMaps[j].Err[0] * prevLayer.FeatureMaps[i].Data[0]
 		}
 	}
 
@@ -210,20 +210,20 @@ func FullyConnectedBackPropagation(layer *Layer, prev_layer *Layer) {
 }
 
 // 向前
-func MaxPoolingForwardPropagation(prev_layer *Layer, layer *Layer) {
+func MaxPoolingForwardPropagation(prevLayer *Layer, layer *Layer) {
 
 	mapW := layer.MapW
 	mapH := layer.MapH
-	upMapW := prev_layer.MapW
+	upMapW := prevLayer.MapW
 
 	for k := 0; k < layer.MapCount; k++ {
 		for i := 0; i < mapH; i++ {
 			for j := 0; j < mapW; j++ {
-				maxVal := prev_layer.FeatureMaps[k].Data[2*i*upMapW+2*j]
+				maxVal := prevLayer.FeatureMaps[k].Data[2*i*upMapW+2*j]
 				for n := 2 * i; n < 2*(i+1); n++ {
 					for m := 2 * j; m < 2*(j+1); m++ {
-						if prev_layer.FeatureMaps[k].Data[n*upMapW+m] > maxVal {
-							maxVal = prev_layer.FeatureMaps[k].Data[n*upMapW+m]
+						if prevLayer.FeatureMaps[k].Data[n*upMapW+m] > maxVal {
+							maxVal = prevLayer.FeatureMaps[k].Data[n*upMapW+m]
 						}
 					}
 				}
@@ -234,32 +234,32 @@ func MaxPoolingForwardPropagation(prev_layer *Layer, layer *Layer) {
 }
 
 // 向后
-func MaxPoolingBackPropagation(layer *Layer, prev_layer *Layer) {
+func MaxPoolingBackPropagation(layer *Layer, prevLayer *Layer) {
 
 	mapW := layer.MapW
 	mapH := layer.MapH
-	upMapW := prev_layer.MapW
+	upMapW := prevLayer.MapW
 
 	for k := 0; k < layer.MapCount; k++ {
 		// delta
 		for i := 0; i < mapH; i++ {
 			for j := 0; j < mapW; j++ {
 				row, col := 2*i, 2*j
-				maxVal := prev_layer.FeatureMaps[k].Data[row*upMapW+col]
+				maxVal := prevLayer.FeatureMaps[k].Data[row*upMapW+col]
 
 				for n := 2 * i; n < 2*(i+1); n++ {
 					for m := 2 * j; m < 2*(j+1); m++ {
-						if prev_layer.FeatureMaps[k].Data[n*upMapW+m] > maxVal {
+						if prevLayer.FeatureMaps[k].Data[n*upMapW+m] > maxVal {
 							row = n
 							col = m
-							maxVal = prev_layer.FeatureMaps[k].Data[n*upMapW+m]
+							maxVal = prevLayer.FeatureMaps[k].Data[n*upMapW+m]
 						} else {
-							prev_layer.FeatureMaps[k].Err[n*upMapW+m] = 0.0
+							prevLayer.FeatureMaps[k].Err[n*upMapW+m] = 0.0
 						}
 					}
 				}
 
-				prev_layer.FeatureMaps[k].Err[row*upMapW+col] = layer.FeatureMaps[k].Err[i*mapW+j] * DTanh(maxVal)
+				prevLayer.FeatureMaps[k].Err[row*upMapW+col] = layer.FeatureMaps[k].Err[i*mapW+j] * DTanh(maxVal)
 			}
 		}
 
@@ -267,13 +267,13 @@ func MaxPoolingBackPropagation(layer *Layer, prev_layer *Layer) {
 }
 
 // 向前
-func ConvolutionForward(prev_layer *Layer, layer *Layer, f bool, pconnection []bool) {
+func ConvolutionForward(prevLayer *Layer, layer *Layer, f bool, pconnection []bool) {
 
 	index := 0
 	mSize := layer.MapW * layer.MapH
 	for i := 0; i < layer.MapCount; i++ {
 		layer.ResetTmpMap()
-		for j := 0; j < prev_layer.MapCount; j++ {
+		for j := 0; j < prevLayer.MapCount; j++ {
 			index = j*layer.MapCount + i
 			if f == true {
 				if pconnection[index] == false {
@@ -282,7 +282,7 @@ func ConvolutionForward(prev_layer *Layer, layer *Layer, f bool, pconnection []b
 			}
 
 			ConvolutionValid(
-				prev_layer.FeatureMaps[j].Data, prev_layer.MapW, prev_layer.MapH,
+				prevLayer.FeatureMaps[j].Data, prevLayer.MapW, prevLayer.MapH,
 				layer.Kernels[index].Weight, layer.KernelW, layer.KernelH,
 				layer.TmpMap, layer.MapW, layer.MapH)
 		}
@@ -294,13 +294,13 @@ func ConvolutionForward(prev_layer *Layer, layer *Layer, f bool, pconnection []b
 }
 
 // 向后传播
-func ConvolutionBackPropagation(layer *Layer, prev_layer *Layer, f bool, pconnection []bool) {
+func ConvolutionBackPropagation(layer *Layer, prevLayer *Layer, f bool, pconnection []bool) {
 
 	index := 0
-	mSize := prev_layer.MapW * prev_layer.MapH
+	mSize := prevLayer.MapW * prevLayer.MapH
 	// delta
-	for i := 0; i < prev_layer.MapCount; i++ {
-		prev_layer.ResetTmpMap()
+	for i := 0; i < prevLayer.MapCount; i++ {
+		prevLayer.ResetTmpMap()
 		for j := 0; j < layer.MapCount; j++ {
 			index = i*layer.MapCount + j
 			if f == true {
@@ -314,19 +314,19 @@ func ConvolutionBackPropagation(layer *Layer, prev_layer *Layer, f bool, pconnec
 					er := layer.FeatureMaps[j].Err[n*layer.MapW+m]
 					for ky := 0; ky < layer.KernelH; ky++ {
 						for kx := 0; kx < layer.KernelW; kx++ {
-							prev_layer.TmpMap[(n+ky)*prev_layer.MapW+m+kx] += er * layer.Kernels[index].Weight[ky*layer.KernelW+kx]
+							prevLayer.TmpMap[(n+ky)*prevLayer.MapW+m+kx] += er * layer.Kernels[index].Weight[ky*layer.KernelW+kx]
 						}
 					}
 				}
 			}
 		}
 		for k := 0; k < mSize; k++ {
-			prev_layer.FeatureMaps[i].Err[k] = prev_layer.TmpMap[k] * DTanh(prev_layer.FeatureMaps[i].Data[k])
+			prevLayer.FeatureMaps[i].Err[k] = prevLayer.TmpMap[k] * DTanh(prevLayer.FeatureMaps[i].Data[k])
 		}
 	}
 
 	// dW
-	for i := 0; i < prev_layer.MapCount; i++ {
+	for i := 0; i < prevLayer.MapCount; i++ {
 		for j := 0; j < layer.MapCount; j++ {
 			index = i*layer.MapCount + j
 			if f == true {
@@ -336,7 +336,7 @@ func ConvolutionBackPropagation(layer *Layer, prev_layer *Layer, f bool, pconnec
 			}
 
 			ConvolutionValid(
-				prev_layer.FeatureMaps[i].Data, prev_layer.MapW, prev_layer.MapH,
+				prevLayer.FeatureMaps[i].Data, prevLayer.MapW, prevLayer.MapH,
 				layer.FeatureMaps[j].Err, layer.MapW, layer.MapH,
 				layer.Kernels[index].DWeight, layer.KernelW, layer.KernelH)
 		}
@@ -379,7 +379,7 @@ func FindIndexLabel(label []float64) (index int) {
 	return
 }
 
-func forwardPropagation(data []float64) {
+func ForwardPropagation(data []float64) {
 
 	InputLayer.FeatureMaps[0].Data = data
 
@@ -400,7 +400,7 @@ func forwardPropagation(data []float64) {
 
 }
 
-func backwardPropagation(label []float64) {
+func BackwardPropagation(label []float64) {
 	for i := 0; i < OutputLayer.MapCount; i++ {
 		OutputLayer.FeatureMaps[i].Err[0] = DMse(OutputLayer.FeatureMaps[i].Data[0], label[i]) * DTanh(OutputLayer.FeatureMaps[i].Data[0])
 	}
@@ -462,8 +462,8 @@ func train(inputs [][]float64, labels [][]float64, learningRate float64) {
 		resetWeights()
 		for j := 0; j < BatchSize; j++ {
 			index := i*BatchSize + j
-			forwardPropagation(inputs[randPerm[index]])
-			backwardPropagation(labels[randPerm[index]])
+			ForwardPropagation(inputs[randPerm[index]])
+			BackwardPropagation(labels[randPerm[index]])
 		}
 
 		// 更新权值
@@ -481,7 +481,7 @@ func predict(inputs [][]float64, labels [][]float64) {
 	actual := 0
 	confusionMatrix := [100]int{}
 	for i := 0; i < TestCount; i++ {
-		forwardPropagation(inputs[i])
+		ForwardPropagation(inputs[i])
 
 		p = FindIndex(OutputLayer)
 		actual = FindIndexLabel(labels[i])
@@ -509,13 +509,10 @@ func predict(inputs [][]float64, labels [][]float64) {
 
 }
 
-func Run(inputs [][]float64, labels [][]float64, testInputs [][]float64, testLabels [][]float64) {
+func InitLayer() {
 	var (
-		learningRate     float64
-		trainCount       int
 		kernelW, kernelH int
 	)
-
 	InputLayer = &Layer{}
 	C1Layer = &Layer{}
 	S2Layer = &Layer{}
@@ -558,19 +555,38 @@ func Run(inputs [][]float64, labels [][]float64, testInputs [][]float64, testLab
 	kernelH = 1
 	OutputLayer.Init(120, 10, kernelW, kernelH, 1, 1, false)
 	OutputLayer.Name = "OutputLayer"
+}
 
-	trainCount = 3
-	learningRate = 0.01 * math.Sqrt(float64(BatchSize))
-	for i := 0; i < trainCount; i++ {
-		fmt.Println("train epoch is: ", i)
+func Run(inputs [][]float64, labels [][]float64, testInputs [][]float64, testLabels [][]float64, model string) {
+	var (
+		learningRate float64
+		trainCount   int
+	)
+
+	InitLayer()
+
+	if model == "train" {
+		trainCount = 3
+		learningRate = 0.01 * math.Sqrt(float64(BatchSize))
+		for i := 0; i < trainCount; i++ {
+			fmt.Println("train epoch is: ", i)
+			startTime := time.Now()
+			train(inputs, labels, learningRate)
+			fmt.Println("train time:", time.Since(startTime))
+
+			startTime = time.Now()
+			predict(testInputs, testLabels)
+			fmt.Println("predict time:", time.Since(startTime))
+
+			learningRate *= 0.85
+		}
+		SaveLeNet5()
+	} else if model == "test" {
+		fmt.Println("loading model data.")
+		LoadLeNet()
 		startTime := time.Now()
-		train(inputs, labels, learningRate)
-		fmt.Println("train time:", time.Since(startTime))
-
-		startTime = time.Now()
 		predict(testInputs, testLabels)
 		fmt.Println("predict time:", time.Since(startTime))
-
-		learningRate *= 0.85
 	}
+
 }

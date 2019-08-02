@@ -15,6 +15,7 @@ func main() {
 	sourceImageFile := flag.String("train_images", "", "source image file")
 	testLabelFile := flag.String("test_labels", "", "test label file")
 	testImageFile := flag.String("test_images", "", "test image file")
+	model := flag.String("model", "train", "model")
 
 	flag.Parse()
 
@@ -37,6 +38,6 @@ func main() {
 	testInputs := mnist.PrepareImages(testImageData)
 	testTargets := mnist.PrepareLabels(testLabelData)
 
-	lenet5.Run(inputs, targets, testInputs, testTargets)
+	lenet5.Run(inputs, targets, testInputs, testTargets, *model)
 
 }
