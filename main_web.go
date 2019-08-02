@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
@@ -22,9 +23,12 @@ func init() {
 }
 
 func main() {
+	port := flag.String("port", "8080", "port")
+	flag.Parse()
 
+	fmt.Println("web run port:", *port)
 	indexHandler := http.FileServer(http.Dir("./web/public"))
-	http.ListenAndServe(":9900", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	http.ListenAndServe(fmt.Sprintf(":%s", *port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/":
 			indexHandler.ServeHTTP(w, r)
