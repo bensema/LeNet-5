@@ -1,13 +1,15 @@
+<!-- https://github.com/bensema/LeNet-5 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>MNIST</title>
     <style>
+
         #c {
             position: absolute;
-            left: 50%;
-            top: 50%;
+            left: 40%;
+            top: 20%;
             margin: -140px 0 0 -140px
         }
 
@@ -18,24 +20,51 @@
         #canvas2 {
             display: none;
         }
+        #clear-button {
+            padding: 7px 20px;
+            background-color: #65bcd4;
+            font-weight: normal;
+            font-size: 1.1em;
+            border: none;
+            color: white;
+            border-radius: 3px;
+            margin: 10px 0 0 0;
+        }
     </style>
+    <!-- https://github.com/bensema/LeNet-5 -->
 </head>
 <body>
 <div id="c">
     <canvas id="canvas2" width="32" height="32"></canvas>
-    <canvas id="canvas" width="320" height="320" ></canvas>
+    <canvas id="canvas" width="120" height="120"></canvas>
+
     <div id="num"></div>
+    <div>
+        <button id="clear-button" onclick="clearData()">Clear</button>
+    </div>
+    <hr>
+    <div id="c1_layer">
+    </div>
+    <div id="s2_layer">
+    </div>
+    <div id="c3_layer">
+    </div>
+    <div id="s4_layer">
+    </div>
+    <div id="c5_layer">
+    </div>
+    <div id="out_layer">
+    </div>
 </div>
 <script>
+    let ctx, ctx2;
 
     ((canvas, canvas2) => {
-        let ctx = canvas.getContext("2d");
-        let ctx2 = canvas2.getContext("2d");
-        ctx.fillRect(0,0,320,320);
+        ctx = canvas.getContext("2d");
+        ctx2 = canvas2.getContext("2d");
+        ctx.fillRect(0,0,120,120);
         ctx.fillStyle='#fff';
 
-        ctx2.fillRect(0,0,320,320);
-        ctx2.fillStyle='#fff';
 
         let startDraw = false;
         canvas.addEventListener("mousedown", () => {
@@ -47,8 +76,9 @@
             }
 
             ctx.beginPath();
-            ctx.arc(e.layerX, e.layerY, 13, 0, 2 * Math.PI);
-            ctx.fill()
+            ctx.arc(e.layerX, e.layerY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
         });
         canvas.addEventListener("mouseup", () => {
             startDraw = false;
@@ -88,14 +118,71 @@
             let xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (this.readyState === 4 && this.status === 200) {
+                    jsonData = JSON.parse(this.responseText);
                     document.getElementById("num").innerHTML =
-                            this.responseText;
+                            '结果:'+jsonData.Num;
+
+                    var tmp = '';
+                    tmp += "<div>C1</div>";
+                    for(var i=0;i<jsonData.C1.length;i++) {
+                        tmp += '<img style="height: 112px; width: 112px" src="'+jsonData.C1[i]+'">';
+                    }
+                    document.getElementById("c1_layer").innerHTML = tmp;
+
+                    tmp = '';
+                    tmp += "<div>S2</div>";
+                    for(var i=0;i<jsonData.S2.length;i++) {
+                        tmp += '<img style="height: 56px; width: 56px" src="'+jsonData.S2[i]+'">';
+                    }
+                    document.getElementById("s2_layer").innerHTML = tmp;
+
+                    tmp = '';
+                    tmp += "<div>C3</div>";
+                    for(var i=0;i<jsonData.C3.length;i++) {
+                        tmp += '<img style="height: 40px; width: 40px" src="'+jsonData.C3[i]+'">';
+                    }
+                    document.getElementById("c3_layer").innerHTML = tmp;
+
+                    tmp = '';
+                    tmp += "<div>S4</div>";
+                    for(var i=0;i<jsonData.S4.length;i++) {
+                        tmp += '<img style="height: 20px; width: 20px" src="'+jsonData.S4[i]+'">';
+                    }
+                    document.getElementById("s4_layer").innerHTML = tmp;
+
+                    tmp = '';
+                    tmp += "<div>C5</div>";
+                    for(var i=0;i<jsonData.C5.length;i++) {
+                        tmp += '<img style="height: 5px; width: 5px" src="'+jsonData.C5[i]+'">';
+                    }
+                    document.getElementById("c5_layer").innerHTML = tmp;
+
+                    tmp = '';
+                    tmp += "<div>Out</div>";
+                    for(var i=0;i<jsonData.Out.length;i++) {
+                        tmp += '<img style="height: 30px; width: 30px" src="'+jsonData.Out[i]+'">';
+                    }
+                    document.getElementById("out_layer").innerHTML = tmp;
                 }
             };
             xhr.open("POST", "/classifier", true);
             xhr.send("data=" + data.join(","));
         }, 500);
     })(document.getElementById("canvas"), document.getElementById("canvas2"));
+
+    function clearData() {
+        ctx.fillStyle='#000';
+        ctx.fillRect(0,0,120,120);
+        ctx.fillStyle='#fff';
+
+        document.getElementById("c1_layer").innerHTML = '';
+        document.getElementById("s2_layer").innerHTML = '';
+        document.getElementById("c3_layer").innerHTML = '';
+        document.getElementById("s4_layer").innerHTML = '';
+        document.getElementById("c5_layer").innerHTML = '';
+        document.getElementById("out_layer").innerHTML = '';
+    }
+
 </script>
 </body>
 </html>
